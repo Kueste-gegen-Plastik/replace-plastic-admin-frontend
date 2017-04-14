@@ -4,37 +4,36 @@
 		<el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
 			<el-form :inline="true" :model="filters">
 				<el-form-item>
-					<el-input v-model="filters.name" placeholder="姓名"></el-input>
+					<el-input v-model="filters.email" placeholder="E-Mail-Adresse"></el-input>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" v-on:click="getUsers">查询</el-button>
+					<el-button type="primary" v-on:click="getEntries">Suchen</el-button>
 				</el-form-item>
 				<el-form-item>
-					<el-button type="primary" @click="handleAdd">新增</el-button>
+					<el-button type="primary" @click="handleAdd">Hinzufügen</el-button>
 				</el-form-item>
 			</el-form>
 		</el-col>
 
-		<!--列表-->
-		<el-table :data="users" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
+		<el-table :data="entries" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
 			<el-table-column type="selection" width="55">
 			</el-table-column>
-			<el-table-column type="index" width="60">
+			<el-table-column prop="id" width="60">
 			</el-table-column>
-			<el-table-column prop="name" label="姓名" width="120" sortable>
+			<el-table-column prop="email" label="E-Mail" width="120" sortable>
 			</el-table-column>
-			<el-table-column prop="sex" label="性别" width="100" :formatter="formatSex" sortable>
+			<el-table-column prop="firstname" label="Vorname" width="100"   sortable>
 			</el-table-column>
-			<el-table-column prop="age" label="年龄" width="100" sortable>
+			<el-table-column prop="name" label="Nachname" width="100" sortable>
 			</el-table-column>
-			<el-table-column prop="birth" label="生日" width="120" sortable>
+			<el-table-column prop="zip" label="PLZ" width="120" sortable>
 			</el-table-column>
-			<el-table-column prop="addr" label="地址" min-width="180" sortable>
+			<el-table-column prop="productId" label="Produkt" min-width="180" sortable>
 			</el-table-column>
-			<el-table-column label="操作" width="150">
+			<el-table-column label="Aktionen" width="150">
 				<template scope="scope">
-					<el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-					<el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
+					<el-button size="small" @click="handleEdit(scope.$index, scope.row)">Editieren</el-button>
+					<el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">Löschen</el-button>
 				</template>
 			</el-table-column>
 		</el-table>
@@ -42,35 +41,28 @@
 		<!--工具条-->
 		<el-col :span="24" class="toolbar">
 			<el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">批量删除</el-button>
-			<el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="20" :total="total" style="float:right;">
+			<el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="25" :total="total" style="float:right;">
 			</el-pagination>
 		</el-col>
 
-		<!--编辑界面-->
-		<el-dialog title="编辑" v-model="editFormVisible" :close-on-click-modal="false">
+		<el-dialog title="Datensatz editieren" v-model="editFormVisible" :close-on-click-modal="false">
 			<el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
-				<el-form-item label="姓名" prop="name">
-					<el-input v-model="editForm.name" auto-complete="off"></el-input>
+				<el-form-item label="E-Mail" prop="email">
+					<el-input v-model="editForm.email" auto-complete="off"></el-input>
 				</el-form-item>
-				<el-form-item label="性别">
-					<el-radio-group v-model="editForm.sex">
-						<el-radio class="radio" :label="1">男</el-radio>
-						<el-radio class="radio" :label="0">女</el-radio>
-					</el-radio-group>
+				<el-form-item label="Vorname" prop="firstname">
+					<el-input v-model="editForm.firstname" auto-complete="off"></el-input>
 				</el-form-item>
-				<el-form-item label="年龄">
-					<el-input-number v-model="editForm.age" :min="0" :max="200"></el-input-number>
+				<el-form-item label="Nachname" prop="name">
+					<el-input v-model="editForm.firstname" auto-complete="off"></el-input>
 				</el-form-item>
-				<el-form-item label="生日">
-					<el-date-picker type="date" placeholder="选择日期" v-model="editForm.birth"></el-date-picker>
-				</el-form-item>
-				<el-form-item label="地址">
-					<el-input type="textarea" v-model="editForm.addr"></el-input>
+				<el-form-item label="PLZ" prop="zip">
+					<el-input v-model="editForm.zip" auto-complete="off"></el-input>
 				</el-form-item>
 			</el-form>
 			<div slot="footer" class="dialog-footer">
-				<el-button @click.native="editFormVisible = false">取消</el-button>
-				<el-button type="primary" @click.native="editSubmit" :loading="editLoading">提交</el-button>
+				<el-button @click.native="editFormVisible = false">Abbrechen</el-button>
+				<el-button type="primary" @click.native="editSubmit" :loading="editLoading">Speichern</el-button>
 			</div>
 		</el-dialog>
 
@@ -106,8 +98,43 @@
 
 <script>
 	import util from '../../common/js/util'
+
 	//import NProgress from 'nprogress'
-	import { getUserListPage, removeUser, batchRemoveUser, editUser, addUser } from '../../api/api';
+	import api from '../../api';
+
+
+	/*
+		id : {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      unique: true,
+      autoIncrement: true,
+      primaryKey: true
+    },
+		email: {
+      type: Sequelize.STRING
+    },
+		name: {
+      type: Sequelize.STRING
+    },
+		firstname: {
+      type: Sequelize.STRING
+    },
+		zip: {
+      type: Sequelize.STRING(6)
+    },
+		sent: {
+      type: Sequelize.BOOLEAN,
+      allowNull: false,
+      default: false
+    },
+    createdAt: {
+      type: Sequelize.DATE
+    },
+    updatedAt: {
+      type: Sequelize.DATE
+    }
+	*/
 
 	export default {
 		data() {
@@ -115,7 +142,7 @@
 				filters: {
 					name: ''
 				},
-				users: [],
+				entries: [],
 				total: 0,
 				page: 1,
 				listLoading: false,
@@ -125,57 +152,68 @@
 				editLoading: false,
 				editFormRules: {
 					name: [
-						{ required: true, message: '请输入姓名', trigger: 'blur' }
+						{ required: true, message: 'Name ist ein Pflichtfeld', trigger: 'blur' }
+					],
+					firstname: [
+						{ required: true, message: 'Vorname ist ein Pflichtfeld', trigger: 'blur' }
+					],
+					email: [
+						{ required: true, message: 'E-Mail ist ein Pflichtfeld', trigger: 'blur' }
+					],
+					zip: [
+						{ required: true, message: 'PLZ ist ein Pflichtfeld', trigger: 'blur' }
 					]
 				},
-				//编辑界面数据
+				
 				editForm: {
-					id: 0,
 					name: '',
-					sex: -1,
-					age: 0,
-					birth: '',
-					addr: ''
+					firstname: '',
+					email: '',
+					zip: ''
 				},
 
-				addFormVisible: false,//新增界面是否显示
+				addFormVisible: false,
 				addLoading: false,
 				addFormRules: {
 					name: [
-						{ required: true, message: '请输入姓名', trigger: 'blur' }
+						{ required: true, message: 'Name ist ein Pflichtfeld', trigger: 'blur' }
+					],
+					firstname: [
+						{ required: true, message: 'Vorname ist ein Pflichtfeld', trigger: 'blur' }
+					],
+					email: [
+						{ required: true, message: 'E-Mail ist ein Pflichtfeld', trigger: 'blur' }
+					],
+					zip: [
+						{ required: true, message: 'PLZ ist ein Pflichtfeld', trigger: 'blur' }
 					]
 				},
 				//新增界面数据
 				addForm: {
 					name: '',
-					sex: -1,
-					age: 0,
-					birth: '',
-					addr: ''
+					firstname: '',
+					email: '',
+					zip: ''
 				}
 
 			}
 		},
 		methods: {
-			//性别显示转换
-			formatSex: function (row, column) {
-				return row.sex == 1 ? '男' : row.sex == 0 ? '女' : '未知';
-			},
 			handleCurrentChange(val) {
 				this.page = val;
-				this.getUsers();
+				this.getEntries();
 			},
 			//获取用户列表
-			getUsers() {
+			getEntries() {
 				let para = {
-					page: this.page,
-					name: this.filters.name
+					$skip: 25 * this.page,
+					email: this.filters.email
 				};
 				this.listLoading = true;
 				//NProgress.start();
-				getUserListPage(para).then((res) => {
-					this.total = res.data.total;
-					this.users = res.data.users;
+				api.getEntries(para).then((res) => {
+					this.total = res.total;
+					this.entries = res.data;
 					this.listLoading = false;
 					//NProgress.done();
 				});
@@ -195,7 +233,7 @@
 							message: '删除成功',
 							type: 'success'
 						});
-						this.getUsers();
+						this.getEntries();
 					});
 				}).catch(() => {
 
@@ -235,7 +273,7 @@
 								});
 								this.$refs['editForm'].resetFields();
 								this.editFormVisible = false;
-								this.getUsers();
+								this.getEntries();
 							});
 						});
 					}
@@ -259,7 +297,7 @@
 								});
 								this.$refs['addForm'].resetFields();
 								this.addFormVisible = false;
-								this.getUsers();
+								this.getEntries();
 							});
 						});
 					}
@@ -284,7 +322,7 @@
 							message: '删除成功',
 							type: 'success'
 						});
-						this.getUsers();
+						this.getEntries();
 					});
 				}).catch(() => {
 
@@ -292,7 +330,7 @@
 			}
 		},
 		mounted() {
-			this.getUsers();
+			this.getEntries();
 		}
 	}
 

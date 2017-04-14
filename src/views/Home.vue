@@ -109,7 +109,7 @@
 				this.$confirm('确认退出吗?', '提示', {
 					//type: 'warning'
 				}).then(() => {
-					sessionStorage.removeItem('user');
+					sessionStorage.removeItem('rppdata');
 					_this.$router.push('/login');
 				}).catch(() => {
 
@@ -126,10 +126,10 @@
 			}
 		},
 		mounted() {
-			var user = sessionStorage.getItem('user');
+			var user = sessionStorage.getItem('rppdata');
 			if (user) {
 				user = JSON.parse(user);
-				this.sysUserName = user.name || '';
+				this.sysUserName = (user.data.name + ' ' + user.data.lastname);
 				this.sysUserAvatar = user.avatar || '';
 			}
 
