@@ -1,62 +1,53 @@
 import axios from 'axios';
 
-let base = 'http://localhost:8888/';
+let base = 'http://localhost:8888/'; // @TODO Move this to env-config
 
-class Api {
+export const HTTP = axios.create({
+    baseURL: base
+})
+HTTP.interceptors.request.use(function (config) {
+    var user = sessionStorage.getItem('rpp_userdata');
+    if(user) {
+        config.headers.Authorization = 'Bearer ' + JSON.parse(user).token;
+    }
+    return config;
+}, function (error) {
+    return Promise.reject(error);
+});
 
-    constructor() {
-        this.makeAxiosInstance();
+class Auth {
+    login(params) {
+        return HTTP.post('/auth/local', params);
+    }
+}
+
+class RestApi {
+
+    constructor(type) {
+        this.type = type;
     }
 
-    makeAxiosInstance(token) {
-        let cfg = {
-            baseURL: base
-        }
-        if(typeof token !== 'undefined') {
-            cfg.headers = {
-                Authorization: 'Bearer ' + token
-            }
-        }
-        this.HTTP = axios.create(cfg);
+    get(params) {
+        return HTTP.get('/' + this.type, params).then(res => res.data);
     }
 
-    auth(params) {
-        return this.HTTP.post('/auth/local', params);
+    create(data) {
+        return HTTP.post('/' + this.type, data).then(res => res.data);
     }
 
-    getEntries(params) {
-        return this.HTTP.get('/entries', params);
-    }
-
-    setEntry(data) {
-        return this.HTTP.post('/entries', data).then(res => res.data);
-    }
-
-    editEntry(id, data) {
+    update(id, data) {
         if(!id) return;
-        return this.HTTP.patch('/entries', data).then(res => res.data);
+        return HTTP.patch('/' + this.type + '/' + id, data).then(res => res.data);
     }
 
-    deleteEntry(data) {
-        return this.HTTP.delete('/entries', data).then(res => res.data);
+    delete(id) {
+        return HTTP.delete('/' + this.type + '/' + id).then(res => res.data);
     }
 
 }
  
-const api = new Api();
-export default api;
-
-
-// export const auth = params => { return HTTP.post(`${base}/auth/local`, params).then(res => res.data); };
-/*
-export const getUserList = params => { return HTTP.get(`${base}/user/list`, { params: params }); };
-
-export const getUserListPage = params => { return HTTP.get(`${base}/user/listpage`, { params: params }); };
-
-export const removeUser = params => { return HTTP.get(`${base}/user/remove`, { params: params }); };
-
-export const batchRemoveUser = params => { return HTTP.get(`${base}/user/batchremove`, { params: params }); };
-
-export const editUser = params => { return HTTP.get(`${base}/user/edit`, { params: params }); };
-
-export const addUser = params => { return HTTP.get(`${base}/user/add`, { params: params }); };*/
+export const auth = new Auth();
+export const entriesApi = new RestApi('entries');
+export const productsApi = new RestApi('products');
+export const usersApi = new RestApi('users');
+export const vendorsApi = new RestApi('vendors');

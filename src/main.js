@@ -25,9 +25,9 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   //NProgress.start();
   if (to.path == '/login') {
-    sessionStorage.removeItem('rppdata');
+    sessionStorage.removeItem('rpp_userdata');
   }
-  let user = JSON.parse(sessionStorage.getItem('rppdata'));
+  let user = JSON.parse(sessionStorage.getItem('rpp_userdata'));
   if (!user && to.path != '/login') {
     next({ path: '/login' })
   } else {

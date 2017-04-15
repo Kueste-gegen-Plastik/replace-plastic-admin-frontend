@@ -40,7 +40,7 @@
 
 		<!--工具条-->
 		<el-col :span="24" class="toolbar">
-			<el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">批量删除</el-button>
+			<el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">Ausgewählte löschen</el-button>
 			<el-pagination layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="25" :total="total" style="float:right;">
 			</el-pagination>
 		</el-col>
@@ -54,7 +54,7 @@
 					<el-input v-model="editForm.firstname" auto-complete="off"></el-input>
 				</el-form-item>
 				<el-form-item label="Nachname" prop="name">
-					<el-input v-model="editForm.firstname" auto-complete="off"></el-input>
+					<el-input v-model="editForm.name" auto-complete="off"></el-input>
 				</el-form-item>
 				<el-form-item label="PLZ" prop="zip">
 					<el-input v-model="editForm.zip" auto-complete="off"></el-input>
@@ -66,31 +66,24 @@
 			</div>
 		</el-dialog>
 
-		<!--新增界面-->
 		<el-dialog title="新增" v-model="addFormVisible" :close-on-click-modal="false">
 			<el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
-				<el-form-item label="姓名" prop="name">
+				<el-form-item label="E-Mail" prop="email">
+					<el-input v-model="addForm.email" auto-complete="off"></el-input>
+				</el-form-item>
+				<el-form-item label="Vorname" prop="firstname">
+					<el-input v-model="addForm.firstname" auto-complete="off"></el-input>
+				</el-form-item>
+				<el-form-item label="Nachname" prop="name">
 					<el-input v-model="addForm.name" auto-complete="off"></el-input>
 				</el-form-item>
-				<el-form-item label="性别">
-					<el-radio-group v-model="addForm.sex">
-						<el-radio class="radio" :label="1">男</el-radio>
-						<el-radio class="radio" :label="0">女</el-radio>
-					</el-radio-group>
-				</el-form-item>
-				<el-form-item label="年龄">
-					<el-input-number v-model="addForm.age" :min="0" :max="200"></el-input-number>
-				</el-form-item>
-				<el-form-item label="生日">
-					<el-date-picker type="date" placeholder="选择日期" v-model="addForm.birth"></el-date-picker>
-				</el-form-item>
-				<el-form-item label="地址">
-					<el-input type="textarea" v-model="addForm.addr"></el-input>
+				<el-form-item label="PLZ" prop="zip">
+					<el-input v-model="addForm.zip" auto-complete="off"></el-input>
 				</el-form-item>
 			</el-form>
 			<div slot="footer" class="dialog-footer">
-				<el-button @click.native="addFormVisible = false">取消</el-button>
-				<el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
+				<el-button @click.native="addFormVisible = false">Abbrechen</el-button>
+				<el-button type="primary" @click.native="addSubmit" :loading="addLoading">Speichern</el-button>
 			</div>
 		</el-dialog>
 	</section>
@@ -100,41 +93,7 @@
 	import util from '../../common/js/util'
 
 	//import NProgress from 'nprogress'
-	import api from '../../api';
-
-
-	/*
-		id : {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      unique: true,
-      autoIncrement: true,
-      primaryKey: true
-    },
-		email: {
-      type: Sequelize.STRING
-    },
-		name: {
-      type: Sequelize.STRING
-    },
-		firstname: {
-      type: Sequelize.STRING
-    },
-		zip: {
-      type: Sequelize.STRING(6)
-    },
-		sent: {
-      type: Sequelize.BOOLEAN,
-      allowNull: false,
-      default: false
-    },
-    createdAt: {
-      type: Sequelize.DATE
-    },
-    updatedAt: {
-      type: Sequelize.DATE
-    }
-	*/
+	import { entriesApi } from '../../api';
 
 	export default {
 		data() {
@@ -146,9 +105,9 @@
 				total: 0,
 				page: 1,
 				listLoading: false,
-				sels: [],//列表选中列
+				sels: [], 
 
-				editFormVisible: false,//编辑界面是否显示
+				editFormVisible: false,
 				editLoading: false,
 				editFormRules: {
 					name: [
@@ -188,7 +147,6 @@
 						{ required: true, message: 'PLZ ist ein Pflichtfeld', trigger: 'blur' }
 					]
 				},
-				//新增界面数据
 				addForm: {
 					name: '',
 					firstname: '',
@@ -203,7 +161,6 @@
 				this.page = val;
 				this.getEntries();
 			},
-			//获取用户列表
 			getEntries() {
 				let para = {
 					$skip: 25 * this.page,
@@ -211,7 +168,7 @@
 				};
 				this.listLoading = true;
 				//NProgress.start();
-				api.getEntries(para).then((res) => {
+				entriesApi.get(para).then((res) => {
 					this.total = res.total;
 					this.entries = res.data;
 					this.listLoading = false;
@@ -225,8 +182,7 @@
 				}).then(() => {
 					this.listLoading = true;
 					//NProgress.start();
-					let para = { id: row.id };
-					removeUser(para).then((res) => {
+					entriesApi.delete(row.id).then((res) => {
 						this.listLoading = false;
 						//NProgress.done();
 						this.$message({
@@ -259,16 +215,16 @@
 			editSubmit: function () {
 				this.$refs.editForm.validate((valid) => {
 					if (valid) {
-						this.$confirm('确认提交吗？', '提示', {}).then(() => {
+						this.$confirm('Wollen Sie wirklich speichern?', '提示', {}).then(() => {
 							this.editLoading = true;
 							//NProgress.start();
 							let para = Object.assign({}, this.editForm);
 							para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-							editUser(para).then((res) => {
+							entriesApi.update(para).then((res) => {
 								this.editLoading = false;
 								//NProgress.done();
 								this.$message({
-									message: '提交成功',
+									message: 'Speichern erfolgreich.',
 									type: 'success'
 								});
 								this.$refs['editForm'].resetFields();
@@ -279,20 +235,20 @@
 					}
 				});
 			},
-			//新增
+			
 			addSubmit: function () {
 				this.$refs.addForm.validate((valid) => {
 					if (valid) {
-						this.$confirm('确认提交吗？', '提示', {}).then(() => {
+						this.$confirm('Wollen Sie wirklich speichern?', '提示', {}).then(() => {
 							this.addLoading = true;
 							//NProgress.start();
 							let para = Object.assign({}, this.addForm);
 							para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-							addUser(para).then((res) => {
+							entriesApi.create(para).then((res) => {
 								this.addLoading = false;
 								//NProgress.done();
 								this.$message({
-									message: '提交成功',
+									message: 'Hinzufügen erfolgreich.',
 									type: 'success'
 								});
 								this.$refs['addForm'].resetFields();
@@ -306,7 +262,7 @@
 			selsChange: function (sels) {
 				this.sels = sels;
 			},
-			//批量删除
+			
 			batchRemove: function () {
 				var ids = this.sels.map(item => item.id).toString();
 				this.$confirm('确认删除选中记录吗？', '提示', {

@@ -4,7 +4,6 @@ import Home from './views/Home.vue'
 import Main from './views/Main.vue'
 import TableEntries from './views/nav1/TableEntries.vue'
 import Form from './views/nav1/Form.vue'
-import user from './views/nav1/user.vue'
 import echarts from './views/charts/echarts.vue'
 
 let routes = [
@@ -29,8 +28,7 @@ let routes = [
         children: [
             { path: '/main', component: Main, name: 'main', hidden: true },
             { path: '/table', component: TableEntries, name: 'Einträge' },
-            { path: '/form', component: Form, name: 'Form' },
-            { path: '/user', component: user, name: '列表' },
+            { path: '/form', component: Form, name: 'Form' }
         ]
     },
     {

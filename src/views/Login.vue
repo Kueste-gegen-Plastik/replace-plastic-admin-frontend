@@ -16,7 +16,7 @@
 </template>
 
 <script> 
-  import api from '../api';
+  import auth from '../api';
   //import NProgress from 'nprogress'
   export default {
     data() {
@@ -49,12 +49,10 @@
           if (valid) {
             this.logining = true;
             var loginParams = { email: this.ruleForm2.email, password: this.ruleForm2.checkPass };
-            api.auth(loginParams).then(res => {
+            auth.login(loginParams).then(res => {
               this.logining = false;
-              api.makeAxiosInstance(res.token);
-              sessionStorage.setItem('rppdata', JSON.stringify(res.data));
+              sessionStorage.setItem('rpp_userdata', JSON.stringify(res.data));
               this.$router.push({ path: '/table' });
-
             }).catch(err => {
                 this.logining = false;
                 this.$message({
@@ -63,7 +61,6 @@
                 });
             });
           } else {
-            console.log('error submit!!');
             return false;
           }
         });

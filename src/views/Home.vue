@@ -75,7 +75,7 @@
 	export default {
 		data() {
 			return {
-				sysName:'VUEADMIN',
+				sysName:'REPLACE PLASTIC ADMIN',
 				collapsed:false,
 				sysUserName: '',
 				sysUserAvatar: '',
@@ -109,7 +109,7 @@
 				this.$confirm('确认退出吗?', '提示', {
 					//type: 'warning'
 				}).then(() => {
-					sessionStorage.removeItem('rppdata');
+					sessionStorage.removeItem('rpp_userdata');
 					_this.$router.push('/login');
 				}).catch(() => {
 
@@ -126,7 +126,7 @@
 			}
 		},
 		mounted() {
-			var user = sessionStorage.getItem('rppdata');
+			var user = sessionStorage.getItem('rpp_userdata');
 			if (user) {
 				user = JSON.parse(user);
 				this.sysUserName = (user.data.name + ' ' + user.data.lastname);
