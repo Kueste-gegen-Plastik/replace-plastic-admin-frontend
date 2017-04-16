@@ -11,18 +11,15 @@
 			</el-col>
 			<el-col :span="4" class="userinfo">
 				<el-dropdown trigger="hover">
-					<span class="el-dropdown-link userinfo-inner"><img :src="this.sysUserAvatar" /> {{sysUserName}}</span>
+					<span class="el-dropdown-link userinfo-inner"></span>
 					<el-dropdown-menu slot="dropdown">
-						<el-dropdown-item>我的消息</el-dropdown-item>
-						<el-dropdown-item>设置</el-dropdown-item>
-						<el-dropdown-item divided @click.native="logout">退出登录</el-dropdown-item>
+						<el-dropdown-item divided @click.native="logout">Abmelden</el-dropdown-item>
 					</el-dropdown-menu>
 				</el-dropdown>
 			</el-col>
 		</el-col>
 		<el-col :span="24" class="main">
 			<aside :class="collapsed?'menu-collapsed':'menu-expanded'">
-				<!--导航菜单-->
 				<el-menu :default-active="$route.path" class="el-menu-vertical-demo" @open="handleopen" @close="handleclose" @select="handleselect"
 					 unique-opened router v-show="!collapsed">
 					<template v-for="(item,index) in $router.options.routes" v-if="!item.hidden">
@@ -75,7 +72,7 @@
 	export default {
 		data() {
 			return {
-				sysName:'REPLACE PLASTIC ADMIN',
+				sysName:'REPLACEPLASTIC',
 				collapsed:false,
 				sysUserName: '',
 				sysUserAvatar: '',

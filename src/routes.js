@@ -2,8 +2,9 @@ import Login from './views/Login.vue'
 import NotFound from './views/404.vue'
 import Home from './views/Home.vue'
 import Main from './views/Main.vue'
-import TableEntries from './views/nav1/TableEntries.vue'
-import Form from './views/nav1/Form.vue'
+import TableEntries from './views/daten/TableEntries.vue'
+import TableVendors from './views/daten/TableVendors.vue'
+import TableProducts from './views/daten/TableProducts.vue'
 import echarts from './views/charts/echarts.vue'
 
 let routes = [
@@ -19,16 +20,16 @@ let routes = [
         name: '',
         hidden: true
     },
-    //{ path: '/main', component: Main },
     {
         path: '/',
         component: Home,
         name: 'Daten',
-        iconCls: 'el-icon-message',//图标样式class
+        iconCls: 'el-icon-message', 
         children: [
             { path: '/main', component: Main, name: 'main', hidden: true },
-            { path: '/table', component: TableEntries, name: 'Einträge' },
-            { path: '/form', component: Form, name: 'Form' }
+            { path: '/entries', component: TableEntries, name: 'Einträge' },
+            { path: '/products', component: TableProducts, name: 'Produkte' },
+            { path: '/vendors', component: TableVendors, name: 'Hersteller-Kontakte' }
         ]
     },
     {

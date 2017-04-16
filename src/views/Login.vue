@@ -16,7 +16,8 @@
 </template>
 
 <script> 
-  import auth from '../api';
+  import { auth } from '../api';
+  
   //import NProgress from 'nprogress'
   export default {
     data() {
@@ -52,7 +53,7 @@
             auth.login(loginParams).then(res => {
               this.logining = false;
               sessionStorage.setItem('rpp_userdata', JSON.stringify(res.data));
-              this.$router.push({ path: '/table' });
+              this.$router.push({ path: '/entries' });
             }).catch(err => {
                 this.logining = false;
                 this.$message({
