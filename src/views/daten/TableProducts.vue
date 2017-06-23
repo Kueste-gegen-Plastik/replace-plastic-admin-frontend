@@ -70,7 +70,7 @@
 		data() {
 			return {
 				tableConfig : {
-					name : 'vendors', // name of the entity
+					name : 'product', // name of the entity
 					filter: {
 						label : 'Produktname',
 						key: 'detailname',

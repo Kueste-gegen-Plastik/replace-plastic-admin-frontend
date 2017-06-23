@@ -5,7 +5,8 @@ import Main from './views/Main.vue'
 import TableEntries from './views/daten/TableEntries.vue'
 import TableVendors from './views/daten/TableVendors.vue'
 import TableProducts from './views/daten/TableProducts.vue'
-import echarts from './views/charts/echarts.vue'
+import TableMails from './views/daten/TableMails.vue'
+import TableUsers from './views/konfiguration/TableUsers.vue'
 
 let routes = [
     {
@@ -29,16 +30,17 @@ let routes = [
             { path: '/main', component: Main, name: 'main', hidden: true },
             { path: '/entries', component: TableEntries, name: 'Einträge' },
             { path: '/products', component: TableProducts, name: 'Produkte' },
-            { path: '/vendors', component: TableVendors, name: 'Hersteller-Kontakte' }
+            { path: '/vendors', component: TableVendors, name: 'Hersteller-Kontakte' },
+            { path: '/mails', component: TableMails, name: 'Mails' },
         ]
     },
     {
         path: '/',
         component: Home,
-        name: 'Charts',
-        iconCls: 'fa fa-bar-chart',
+        name: 'Konfiguration',
+        iconCls: 'el-icon-setting', 
         children: [
-            { path: '/echarts', component: echarts, name: 'echarts' }
+            { path: '/users', component: TableUsers, name: 'Benutzer' },
         ]
     },
     {

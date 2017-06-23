@@ -14,18 +14,18 @@
 			</el-form>
 		</el-col>
 
-		<el-table :data="rppData" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
+		<el-table v-if="listLoading || rppData.length > 0" :data="rppData" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
 			<el-table-column type="selection" width="55">
 			</el-table-column>
 			<el-table-column 
 				v-for="colprop in tableConfig.fields" 
 				:prop="colprop.key" 
 				:label="colprop.label"
+				:min-width="['id'].indexOf(colprop.label.toLowerCase()) > -1 ? 100 : 250"
 				:key="colprop.key"
-				:sortable="colprop.sortable ? 'sortable' : false"
-				width="120">
+				:sortable="colprop.sortable ? 'sortable' : false">
 			</el-table-column>
-			<el-table-column label="Aktionen" width="150">
+			<el-table-column label="Aktionen" width="200" fixed="right">
 				<template scope="scope">
 					<el-button size="small" @click="handleEdit(scope.$index, scope.row)">Editieren</el-button>
 					<el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">Löschen</el-button>
@@ -42,7 +42,29 @@
 		<el-dialog title="Datensatz editieren" v-model="editFormVisible" :close-on-click-modal="false">
 			<el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
 				<el-form-item v-for="formItem in tableConfig.fields" :label="formItem.label" :prop="formItem.key" :key="formItem.key">
-					<el-input v-model="editForm[formItem.key]" auto-complete="off"></el-input>
+
+					<!-- normal text fields -->
+					<el-input v-if="!formItem.type || formItem.type === 'text'" :disabled="!formItem.editable" v-model="editForm[formItem.key]" auto-complete="off"></el-input>
+
+					<!-- boolean fields -->
+					<el-checkbox v-model="editForm[formItem.key]" v-if="formItem.type && formItem.type === 'boolean'"  :disabled="!formItem.editable" :label="formItem.label" name="type"></el-checkbox>
+      					
+					<!-- relations (autocomplete) -->
+					<el-autocomplete v-if="formItem.type && formItem.type === 'autocomplete'"
+					v-model="editForm[formItem.key]"
+					:fetch-suggestions="querySearchAsync"
+					placeholder="Suchen..."
+					@select="handleSelect"
+					></el-autocomplete>
+
+					<!-- LONGTEXT -->
+					<el-input  v-if="formItem.type && formItem.type === 'longtext'" type="textarea"  :disabled="!formItem.editable" v-model="editForm[formItem.key]"></el-input>
+
+					<!--  ENUM -->
+					<el-select v-if="formItem.type && formItem.type === 'enum'"  :disabled="!formItem.editable" v-model="editForm[formItem.key]" placeholder="Bitte auswählen...">
+						<el-option v-for="optn in formItem.options" :key="optn" :label="optn" :value="optn"></el-option>
+					</el-select>
+
 				</el-form-item>
 			</el-form>
 			<div slot="footer" class="dialog-footer">
@@ -54,7 +76,29 @@
 		<el-dialog title="Datensatz anlegen" v-model="addFormVisible" :close-on-click-modal="false">
 			<el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
 				<el-form-item v-for="formItem in tableConfig.fields" :label="formItem.label" :prop="formItem.key" :key="formItem.key">
-					<el-input v-model="addForm[formItem.key]" auto-complete="off"></el-input>
+					<!-- normal text fields -->
+					<el-input v-if="!formItem.type || formItem.type === 'text'"  :disabled="!formItem.editable" v-model="addForm[formItem.key]" auto-complete="off"></el-input>
+
+					<!-- boolean fields -->
+					<el-checkbox v-if="formItem.type && formItem.type === 'boolean'"  :disabled="!formItem.editable" :label="formItem.label" name="type"></el-checkbox>
+      					
+					<!-- relations (autocomplete) -->
+					<el-autocomplete v-if="formItem.type && formItem.type === 'autocomplete'"
+					v-model="addForm[formItem.key]"
+					:fetch-suggestions="querySearchAsync"
+					:focus="setModel(formItem.model, formItem.modelsearchfield, formItem.modellabel, formItem.modelvalue)"
+					:props="{ 'label' : formItem.modellabel, 'value' : formItem.modelvalue }"
+					placeholder="Suchen..."
+					@select="handleSelect"
+					></el-autocomplete>
+
+					<!-- LONGTEXT -->
+					<el-input  v-if="formItem.type && formItem.type === 'longtext'"  :disabled="!formItem.editable" type="textarea" v-model="addForm[formItem.key]"></el-input>
+					
+					<!--  ENUM -->
+					<el-select v-if="formItem.type && formItem.type === 'enum'"  :disabled="!formItem.editable" v-model="addForm[formItem.key]" placeholder="Bitte auswählen...">
+						<el-option v-for="optn in formItem.options" :key="optn" :label="optn" :value="optn"></el-option>
+					</el-select>
 				</el-form-item>
 
 			</el-form>
@@ -67,6 +111,7 @@
 </template>
 
 <script>
+
 
 	//import NProgress from 'nprogress'
 	import * as api from '../api';
@@ -84,6 +129,12 @@
 				listLoading: false,
 				sels: [], 
 
+				autocompleteItems: [],
+				autocompleteModel: '',
+				autocompleteModelSearchfield: '',
+				autocompleteModelLabel: '',
+				autocompleteModelValue: '',
+
 				editFormVisible: false,
 				editLoading: false,
 
@@ -99,7 +150,6 @@
 			}
 		},
 		methods: {
-			// add validation rules from config object
 			setTableRules() {
 
 				this.editFormRules = this.addFormRules = {}
@@ -121,25 +171,28 @@
 			},
 			getData() {
 				let para = {
-					$skip: 25 * this.page,
-					email: this.filters.email
+					$skip: 5 * (this.page-1),
+					$limit: 25,
 				};
+				if(this.tableConfig.filter.value !== '') {
+					para[this.tableConfig.filter.key] = this.tableConfig.filter.value;
+				}
 				this.listLoading = true;
 				api[this.tableConfig.name + 'Api'].get(para).then((res) => {
 					this.total = res.total;
-					this.entries = res.data;
+					this.rppData = res.data;
 					this.listLoading = false;
 				});
 			},
-			handleDel: function (index, row) {
-				this.$confirm('确认删除该记录吗?', '提示', {
+			handleDel(index, row) {
+				this.$confirm('Wollen Sie wirklich löschen?', 'Löschen', {
 					type: 'warning'
 				}).then(() => {
 					this.listLoading = true;
 					api[this.tableConfig.name + 'Api'].delete(row.id).then((res) => {
 						this.listLoading = false;
 						this.$message({
-							message: '删除成功',
+							message: 'Gelöscht',
 							type: 'success'
 						});
 						this.getData();
@@ -148,11 +201,11 @@
 
 				});
 			},
-			handleEdit: function (index, row) {
+			handleEdit (index, row) {
 				this.editFormVisible = true;
 				this.editForm = Object.assign({}, row);
 			},
-			handleAdd: function () {
+			handleAdd () {
 				this.addFormVisible = true;
 				let initialConfig = {};
 				this.tableConfig.fields.forEach(field => {
@@ -160,16 +213,14 @@
 				})
 				this.addForm = initialConfig;
 			},
-			editSubmit: function () {
+			editSubmit () {
 				this.$refs.editForm.validate((valid) => {
 					if (valid) {
 						this.$confirm('Wollen Sie wirklich speichern?', 'Speichern', {}).then(() => {
 							this.editLoading = true;
-							//NProgress.start();
 							let para = Object.assign({}, this.editForm);
 							api[this.tableConfig.name + 'Api'].update(para).then((res) => {
 								this.editLoading = false;
-								//NProgress.done();
 								this.$message({
 									message: 'Speichern erfolgreich.',
 									type: 'success'
@@ -183,16 +234,14 @@
 				});
 			},
 			
-			addSubmit: function () {
+			addSubmit () {
 				this.$refs.addForm.validate((valid) => {
 					if (valid) {
 						this.$confirm('Wollen Sie wirklich speichern?', 'Speichern', {}).then(() => {
 							this.addLoading = true;
-							//NProgress.start();
 							let para = Object.assign({}, this.addForm);
 							api[this.tableConfig.name + 'Api'].create(para).then((res) => {
 								this.addLoading = false;
-								//NProgress.done();
 								this.$message({
 									message: 'Hinzufügen erfolgreich.',
 									type: 'success'
@@ -205,8 +254,34 @@
 					}
 				});
 			},
-			selsChange: function (sels) {
+			selsChange (sels) {
 				this.sels = sels;
+			},
+
+			// ---- AUTOCOMPLETE
+			setModel(model, searchfield, modelLabel, modelValue) {
+				this.autocompleteModel = model;
+				this.autocompleteModelSearchfield = searchfield;
+				this.autocompleteModelLabel = modelLabel;
+				this.autocompleteModelValue = modelValue;
+			},
+			querySearchAsync(queryString, cb) {
+				let para = {
+					$limit: 25,
+				};
+				var searchName = this.autocompleteModelSearchfield + '[$like]';
+				para[searchName] = '%' + queryString + '%';
+				api[this.autocompleteModel + 'Api'].get(para).then((res) => {
+					cb(res.data.map(itm => {
+						itm.value = itm[this.autocompleteModelValue];
+						itm.label = itm[this.autocompleteModelLabel];
+						return itm;
+					}));
+				});
+
+			},
+			handleSelect(item) {
+				console.log(item);
 			}
 			
 		},

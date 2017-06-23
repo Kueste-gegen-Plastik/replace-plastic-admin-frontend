@@ -32,8 +32,6 @@ Vue.directive('deep-model', {
     }
 });
 
-//NProgress.configure({ showSpinner: false });
-
 const router = new VueRouter({
   routes
 })
@@ -51,16 +49,10 @@ router.beforeEach((to, from, next) => {
   }
 })
 
-//router.afterEach(transition => {
-//NProgress.done();
-//});
 
 new Vue({
-  //el: '#app',
-  //template: '<App/>',
   router,
   store,
-  //components: { App }
   render: h => h(App)
 }).$mount('#app')
 

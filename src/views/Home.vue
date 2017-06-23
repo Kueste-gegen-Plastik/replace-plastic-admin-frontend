@@ -103,7 +103,7 @@
 			//退出登录
 			logout: function () {
 				var _this = this;
-				this.$confirm('确认退出吗?', '提示', {
+				this.$confirm('Ja', 'Nein', {
 					//type: 'warning'
 				}).then(() => {
 					sessionStorage.removeItem('rpp_userdata');

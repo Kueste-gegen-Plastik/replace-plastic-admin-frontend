@@ -28,7 +28,9 @@ class RestApi {
     }
 
     get(params) {
-        return HTTP.get('/' + this.type, params).then(res => res.data);
+        return HTTP.get('/' + this.type, {
+            params
+        }).then(res => res.data);
     }
 
     create(data) {
@@ -48,6 +50,7 @@ class RestApi {
  
 export const auth = new Auth();
 export const entriesApi = new RestApi('entries');
-export const productsApi = new RestApi('products');
+export const productApi = new RestApi('product');
 export const usersApi = new RestApi('users');
 export const vendorsApi = new RestApi('vendors');
+export const mailsApi = new RestApi('mails');
