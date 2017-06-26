@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-let base = 'http://localhost:8888/'; // @TODO Move this to env-config
+let base = process.env.NODE_ENV === 'production' ? 'https://replacep.arcturus.uberspace.de/api/' : 'http://localhost:8888/'; // @TODO Move this to env-config
 
 export const HTTP = axios.create({
     baseURL: base
