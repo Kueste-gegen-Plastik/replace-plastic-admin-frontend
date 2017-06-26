@@ -51,14 +51,33 @@
 						list: true,
 						message: 'ID ist ein Pflichtfeld',
 						value: ''
-					},{ 
+					}, { 
 						key: 'productId',
 						label:  'Produkt',
 						editable: true,
 						required: true, 
 						sortable: true,
+						type: 'autocomplete',
+						model: 'product',
+						modelsearchfield: 'detailname',
+						modellabel: 'detailname',
+						modelvalue: 'id',
 						list: true,
 						message: 'Produkt ist ein Pflichtfeld',
+						value: ''
+					},{ 
+						key: 'vendorId',
+						label:  'Hersteller-Kontakt',
+						editable: true,
+						required: true, 
+						sortable: true,
+						type: 'autocomplete',
+						model: 'vendor',
+						modelsearchfield: 'vendorname',
+						modellabel: 'vendorname',
+						modelvalue: 'id',
+						list: true,
+						message: 'Hersteller-Kontakt ist ein Pflichtfeld',
 						value: ''
 					}, {
 						key: 'sent',

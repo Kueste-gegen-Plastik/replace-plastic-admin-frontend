@@ -66,7 +66,7 @@
 						message: 'PLZ ist ein Pflichtfeld',
 						value: ''
 					},{ 
-						key: 'productId',
+						key: 'ProductId',
 						label:  'Produkt',
 						editable: true,
 						required: true, 

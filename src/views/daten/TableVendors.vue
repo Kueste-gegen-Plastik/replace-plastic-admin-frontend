@@ -30,10 +30,19 @@
 						message: 'ID ist ein pflichtfeld', 
 						value: ''
 					},{ 
-						key: 'name',
-						label: 'Nachname',
+						key: 'vendorname',
+						label: 'Herstellername',
 						editable: true,
 						required: true, 
+						sortable: true,
+						list: true,
+						message: 'Herstellername ist ein Pflichtfeld', 
+						value: ''
+					},{ 
+						key: 'name',
+						label: 'Ansprechpartner',
+						editable: true,
+						required: false, 
 						sortable: true,
 						list: true,
 						message: 'Name ist ein Pflichtfeld', 
@@ -53,6 +62,7 @@
 						editable: true,
 						required: true, 
 						sortable: true,
+						type: 'longtext',
 						list: true,
 						message: 'Beschreibung ist ein Pflichtfeld',
 						value: ''

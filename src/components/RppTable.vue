@@ -19,10 +19,10 @@
 			</el-table-column>
 			<el-table-column 
 				v-for="colprop in tableConfig.fields" 
-				:prop="colprop.key" 
 				:label="colprop.label"
 				:min-width="['id'].indexOf(colprop.label.toLowerCase()) > -1 ? 100 : 250"
-				:key="colprop.key"
+				:prop="getColpropKey(colprop)" 
+				:key="getColpropKey(colprop)"
 				:sortable="colprop.sortable ? 'sortable' : false">
 			</el-table-column>
 			<el-table-column label="Aktionen" width="200" fixed="right">
@@ -50,9 +50,13 @@
 					<el-checkbox v-model="editForm[formItem.key]" v-if="formItem.type && formItem.type === 'boolean'"  :disabled="!formItem.editable" :label="formItem.label" name="type"></el-checkbox>
       					
 					<!-- relations (autocomplete) -->
-					<el-autocomplete v-if="formItem.type && formItem.type === 'autocomplete'"
+					<el-autocomplete 
+					v-if="formItem.type && formItem.type === 'autocomplete'"
+					:props="{ label: formItem.modellabel, value: formItem.modelValue }" 
 					v-model="editForm[formItem.key]"
 					:fetch-suggestions="querySearchAsync"
+					:trigger-on-focus="false"
+					:focus="setModel(formItem.model, formItem.modelsearchfield, formItem.modellabel, formItem.modelvalue)"
 					placeholder="Suchen..."
 					@select="handleSelect"
 					></el-autocomplete>
@@ -81,13 +85,15 @@
 
 					<!-- boolean fields -->
 					<el-checkbox v-if="formItem.type && formItem.type === 'boolean'"  :disabled="!formItem.editable" :label="formItem.label" name="type"></el-checkbox>
-      					
+	
 					<!-- relations (autocomplete) -->
-					<el-autocomplete v-if="formItem.type && formItem.type === 'autocomplete'"
+					<el-autocomplete 
+					v-if="formItem.type && formItem.type === 'autocomplete'"
+					:props="{ label: formItem.modellabel, value: formItem.modelValue }" 
 					v-model="addForm[formItem.key]"
 					:fetch-suggestions="querySearchAsync"
+					:trigger-on-focus="false"
 					:focus="setModel(formItem.model, formItem.modelsearchfield, formItem.modellabel, formItem.modelvalue)"
-					:props="{ 'label' : formItem.modellabel, 'value' : formItem.modelvalue }"
 					placeholder="Suchen..."
 					@select="handleSelect"
 					></el-autocomplete>
@@ -150,6 +156,19 @@
 			}
 		},
 		methods: {
+			getColpropKey(colprop) {
+				if(typeof colprop.type === 'undefined') return colprop.key;
+				let retVal = '';
+				switch(colprop.type) {
+					case "autocomplete" :
+						retVal = colprop.model + '.' + colprop.modellabel;
+					break;
+					default: 
+						retVal = colprop.key;
+					break;
+				};
+				return retVal;
+			},
 			setTableRules() {
 
 				this.editFormRules = this.addFormRules = {}
@@ -175,7 +194,7 @@
 					$limit: 25,
 				};
 				if(this.tableConfig.filter.value !== '') {
-					para[this.tableConfig.filter.key] = this.tableConfig.filter.value;
+					para[this.tableConfig.filter.key + '[$like]'] = '%' + this.tableConfig.filter.value + '%';
 				}
 				this.listLoading = true;
 				api[this.tableConfig.name + 'Api'].get(para).then((res) => {
@@ -218,8 +237,12 @@
 					if (valid) {
 						this.$confirm('Wollen Sie wirklich speichern?', 'Speichern', {}).then(() => {
 							this.editLoading = true;
-							let para = Object.assign({}, this.editForm);
-							api[this.tableConfig.name + 'Api'].update(para).then((res) => {
+							let para = Object.assign({}, this.editForm), tmpId;
+							if(para.hasOwnProperty('id')) {
+								tmpId = para.id;
+								delete para.id;
+							}
+							api[this.tableConfig.name + 'Api'].update(tmpId, para).then((res) => {
 								this.editLoading = false;
 								this.$message({
 									message: 'Speichern erfolgreich.',
@@ -228,6 +251,12 @@
 								this.$refs['editForm'].resetFields();
 								this.editFormVisible = false;
 								this.getData();
+							}).catch(err => {
+								this.editLoading = false;
+								this.$notify.error({
+									title: 'Fehler',
+									message: err.hasOwnProperty('message') ? err.message : 'Unbekannter Fehler'
+								});
 							});
 						});
 					}
@@ -240,6 +269,10 @@
 						this.$confirm('Wollen Sie wirklich speichern?', 'Speichern', {}).then(() => {
 							this.addLoading = true;
 							let para = Object.assign({}, this.addForm);
+							console.log("PARA", para);
+							if(para.hasOwnProperty('id')) {
+								delete para.id;
+							}
 							api[this.tableConfig.name + 'Api'].create(para).then((res) => {
 								this.addLoading = false;
 								this.$message({
@@ -249,6 +282,12 @@
 								this.$refs['addForm'].resetFields();
 								this.addFormVisible = false;
 								this.getData();
+							}).catch(err => {
+								this.addLoading = false;
+								this.$notify.error({
+									title: 'Fehler',
+									message: err.hasOwnProperty('message') ? err.message : 'Unbekannter Fehler'
+								});
 							});
 						});
 					}
@@ -266,6 +305,7 @@
 				this.autocompleteModelValue = modelValue;
 			},
 			querySearchAsync(queryString, cb) {
+				if(!queryString || (queryString + '').length < 3) return;
 				let para = {
 					$limit: 25,
 				};
